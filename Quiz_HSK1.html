@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title>Quiz Mandarim por HSK</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* General Styles */
+        body {
+            font-family: 'Noto Sans SC', Arial, sans-serif; /* Using a font that supports Chinese characters well */
+            background: linear-gradient(135deg, #fff5f5 0%, #ffe4e1 100%); /* Softer gradient */
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+            color: #333;
+        }
+
+        /* --- Start Screen --- */
+        #start-screen {
+            text-align: center;
+            background: #fff;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border: 3px solid #b22222; /* Firebrick border */
+            width: 90%;
+            max-width: 600px;
+            margin-top: 30px;
+        }
+
+        #start-screen h1 {
+            color: #b22222; /* Firebrick */
+            margin-bottom: 15px;
+        }
+
+        #start-screen p {
+            font-size: 1.1em;
+            margin-bottom: 30px;
+            color: #555;
+        }
+
+        #start-button { /* Ensure this ID matches the one in JS */
+            font-size: 20px;
+            padding: 15px 30px;
+            cursor: pointer;
+            border-radius: 8px;
+            border: none;
+            background-color: #b22222; /* Firebrick */
+            color: white;
+            transition: background-color 0.3s ease;
+        }
+
+        #start-button:hover {
+            background-color: #a31f1f; /* Darker shade on hover */
+        }
+
+        /* --- Quiz Container --- */
+        .quiz-container {
+            background: #fff;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 700px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border: 3px solid #b22222; /* Firebrick border */
+            display: none; /* Hidden initially */
+            flex-direction: column;
+            align-items: center;
+            position: relative; /* Needed if mute button is absolute inside it */
+        }
+
+        .header-img {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .header-img img {
+            width: 100px; /* Slightly smaller */
+            height: auto;
+            border-radius: 5px; /* Optional: slightly round corners */
+        }
+
+        h1.quiz-title { /* Different class for quiz title */
+            text-align: center;
+            color: #b22222; /* Firebrick */
+            margin-bottom: 20px;
+            font-size: 1.8em;
+        }
+
+        /* Level Selector */
+        #level-selection {
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        #level-selection label {
+            margin-right: 10px;
+            font-weight: bold;
+        }
+        select#levelSelect {
+            font-size: 16px;
+            padding: 8px 12px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        /* Progress & Score */
+        #progress-info {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            font-size: 0.95em;
+            color: #555;
+        }
+        #progress-text { }
+        #score-text { }
+
+
+        /* Question Area */
+        .question {
+            font-size: 1.5em; /* Larger font for Hanzi */
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: bold;
+            color: #444;
+            min-height: 50px; /* Ensure space even if text wraps */
+        }
+
+        /* Options Area */
+        .options button {
+            display: block;
+            width: 100%;
+            margin: 10px 0;
+            padding: 15px;
+            font-size: 18px;
+            cursor: pointer;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            background-color: #f8f8f8;
+            color: #333;
+            transition: background-color 0.2s ease, border-color 0.2s ease;
+            text-align: center;
+        }
+
+        .options button:hover:not(:disabled) {
+            background-color: #e9e9e9;
+            border-color: #aaa;
+        }
+
+        .options button.correct {
+            background-color: #d4edda; /* Light Green */
+            border-color: #c3e6cb;
+            color: #155724;
+            font-weight: bold;
+        }
+        .options button.wrong {
+            background-color: #f8d7da; /* Light Red */
+            border-color: #f5c6cb;
+            color: #721c24;
+            font-weight: bold;
+        }
+        .options button:disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        /* Feedback Area */
+        #feedback {
+            margin-top: 15px;
+            font-weight: bold;
+            text-align: center;
+            min-height: 25px; /* Reserve space */
+            font-size: 1.1em;
+        }
+        #feedback.correct-feedback {
+            color: #155724; /* Dark Green */
+        }
+        #feedback.wrong-feedback {
+            color: #721c24; /* Dark Red */
+        }
+        #feedback.hint-feedback {
+            color: #004085; /* Dark Blue */
+        }
+
+
+        /* Result Area */
+        #result {
+            font-size: 22px;
+            margin-top: 25px;
+            text-align: center;
+            font-weight: bold;
+            color: #b22222; /* Firebrick */
+        }
+
+        /* Action Buttons Area */
+        .action-buttons {
+            display: flex;
+            justify-content: space-around; /* Distribute buttons */
+            align-items: center;
+            width: 100%;
+            max-width: 500px; /* Limit width of the button group */
+            margin: 25px auto 0; /* Center the group */
+        }
+
+        .action-buttons button {
+            padding: 10px 15px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            border-radius: 6px;
+            color: white;
+            min-width: 100px; /* Ensure buttons have decent width */
+            text-align: center;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+        }
+        .action-buttons button:active {
+             transform: scale(0.98); /* Slight press effect */
+        }
+
+        #restart { background-color: #b22222; } /* Firebrick */
+        #restart:hover { background-color: #a31f1f; }
+
+        #skip { background-color: #ffc107; } /* Amber */
+        #skip:hover { background-color: #e0a800; }
+
+        #hint { background-color: #17a2b8; } /* Info Blue */
+        #hint:hover { background-color: #138496; }
+
+        /* Hide elements initially */
+        #result, #feedback {
+            display: none;
+        }
+
+        /* --- Mute Button Style --- */
+        #muteButton {
+            position: fixed; /* Or absolute within the container */
+            top: 15px;
+            right: 15px;
+            background: #fff;
+            border: 1px solid #ccc;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            font-size: 20px;
+            cursor: pointer;
+            z-index: 10; /* Ensure it's above other elements */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: background-color 0.2s ease;
+        }
+         #muteButton:hover {
+             background-color: #f0f0f0;
+         }
+
+    </style>
+</head>
+<body>
+
+    <!-- Start Screen -->
+    <div id="start-screen">
+        <div class="header-img">
+            <img alt="Bandeira da China" src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Flag_of_the_People%27s_Republic_of_China.svg/1920px-Flag_of_the_People%27s_Republic_of_China.svg.png"/>
+        </div>
+        <h1>Quiz de Mandarim HSK</h1>
+        <p>Teste seus conhecimentos de vocabulário!</p>
+        <!-- VERIFIQUE SE ESTE BOTÃO ESTÁ EXATAMENTE ASSIM NO SEU HTML -->
+        <button id="start-button">Iniciar Quiz</button>
+    </div>
+
+    <!-- Quiz Container -->
+    <div class="quiz-container" id="quiz-container">
+        <!-- Conteúdo do quiz como antes -->
+        <div class="header-img">
+             <img alt="Bandeira da China" src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Flag_of_the_People%27s_Republic_of_China.svg/1920px-Flag_of_the_People%27s_Republic_of_China.svg.png"/>
+        </div>
+        <h1 class="quiz-title">Quiz de Mandarim</h1>
+
+        <div id="level-selection">
+             <label for="levelSelect">Nível:</label>
+             <select id="levelSelect" onchange="confirmLevelChange()">
+                <option value="HSK1" selected>HSK 1</option>
+                <!-- <option value="HSK2">HSK 2</option> -->
+             </select>
+        </div>
+
+        <div id="progress-info">
+             <span id="progress-text">Pergunta: 1 / 20</span>
+             <span id="score-text">Pontos: 0</span>
+        </div>
+
+        <div class="question" id="question">Carregando pergunta...</div>
+        <div class="options" id="options"></div>
+        <div id="feedback"></div>
+        <div id="result"></div>
+
+        <div class="action-buttons">
+            <button id="restart" onclick="startQuiz()">🔄 Recomeçar</button>
+            <button id="skip" onclick="skipQuestion()">⏭ Pular</button>
+            <button id="hint" onclick="showHint()">💡 Dica</button>
+        </div>
+    </div>
+
+    <!-- =================================================================== -->
+    <!-- == IMPORTANTE: Baixe os arquivos MP3 para a mesma pasta deste HTML == -->
+    <!-- ==            e use os nomes de arquivo abaixo (correct.mp3, etc.) == -->
+    <!-- =================================================================== -->
+    <audio id="correctSound" preload="auto" src="correct.mp3"></audio>
+    <audio id="wrongSound" preload="auto" src="wrong.mp3"></audio>
+    <audio id="backgroundMusic" loop preload="auto" src="background.mp3"></audio>
+
+    <!-- Mute Button (Placed outside container for fixed positioning) -->
+    <button id="muteButton" title="Mute/Unmute Música">🎵</button>
+
+
+    <script>
+        // Vocabulary Data (levels object as before)
+        const levels = {
+          "HSK1": [{"汉字": "爱", "Pinyin": "ài", "Português": "amar", "HSK": 1}, {"汉字": "八", "Pinyin": "bā", "Português": "oito", "HSK": 1}, {"汉字": "爸爸", "Pinyin": "bàba", "Português": "pai", "HSK": 1}, {"汉字": "杯子", "Pinyin": "bēizi", "Português": "copo", "HSK": 1}, {"汉字": "北京", "Pinyin": "Běijīng", "Português": "Pequim", "HSK": 1}, {"汉字": "本", "Pinyin": "běn", "Português": "classificador para livros", "HSK": 1}, {"汉字": "不", "Pinyin": "bù", "Português": "não", "HSK": 1}, {"汉字": "菜", "Pinyin": "cài", "Português": "prato, vegetais", "HSK": 1}, {"汉字": "茶", "Pinyin": "chá", "Português": "chá", "HSK": 1}, {"汉字": "吃", "Pinyin": "chī", "Português": "comer", "HSK": 1}, {"汉字": "出租车", "Pinyin": "chūzūchē", "Português": "táxi", "HSK": 1}, {"汉字": "打电话", "Pinyin": "dǎ diànhuà", "Português": "ligar (telefone)", "HSK": 1}, {"汉字": "大", "Pinyin": "dà", "Português": "grande", "HSK": 1}, {"汉字": "的", "Pinyin": "de", "Português": "partícula de posse", "HSK": 1}, {"汉字": "点", "Pinyin": "diǎn", "Português": "hora, ponto", "HSK": 1}, {"汉字": "电脑", "Pinyin": "diànnǎo", "Português": "computador", "HSK": 1}, {"汉字": "电视", "Pinyin": "diànshì", "Português": "televisão", "HSK": 1}, {"汉字": "电影", "Pinyin": "diànyǐng", "Português": "filme", "HSK": 1}, {"汉字": "东西", "Pinyin": "dōngxi", "Português": "coisa", "HSK": 1}, {"汉字": "都", "Pinyin": "dōu", "Português": "todos", "HSK": 1}, {"汉字": "读", "Pinyin": "dú", "Português": "ler", "HSK": 1}, {"汉字": "对不起", "Pinyin": "duìbuqǐ", "Português": "desculpe", "HSK": 1}, {"汉字": "多", "Pinyin": "duō", "Português": "muito", "HSK": 1}, {"汉字": "多少", "Pinyin": "duōshǎo", "Português": "quanto", "HSK": 1}, {"汉字": "儿子", "Pinyin": "érzi", "Português": "filho", "HSK": 1}, {"汉字": "二", "Pinyin": "èr", "Português": "dois", "HSK": 1}, {"汉字": "饭店", "Pinyin": "fàndiàn", "Português": "restaurante", "HSK": 1}, {"汉字": "飞机", "Pinyin": "fēijī", "Português": "avião", "HSK": 1}, {"汉字": "分钟", "Pinyin": "fēnzhōng", "Português": "minuto", "HSK": 1}, {"汉字": "高兴", "Pinyin": "gāoxìng", "Português": "feliz", "HSK": 1}, {"汉字": "个", "Pinyin": "gè", "Português": "classificador geral", "HSK": 1}, {"汉字": "工作", "Pinyin": "gōngzuò", "Português": "trabalho", "HSK": 1}, {"汉字": "狗", "Pinyin": "gǒu", "Português": "cachorro", "HSK": 1}, {"汉字": "汉语", "Pinyin": "Hànyǔ", "Português": "língua chinesa", "HSK": 1}, {"汉字": "好", "Pinyin": "hǎo", "Português": "bom", "HSK": 1}, {"汉字": "号", "Pinyin": "hào", "Português": "número", "HSK": 1}, {"汉字": "喝", "Pinyin": "hē", "Português": "beber", "HSK": 1}, {"汉字": "和", "Pinyin": "hé", "Português": "e", "HSK": 1}, {"汉字": "很", "Pinyin": "hěn", "Português": "muito", "HSK": 1}, {"汉字": "后面", "Pinyin": "hòumian", "Português": "atrás", "HSK": 1}, {"汉字": "回", "Pinyin": "huí", "Português": "voltar", "HSK": 1}, {"汉字": "会", "Pinyin": "huì", "Português": "saber (fazer algo)", "HSK": 1}, {"汉字": "几", "Pinyin": "jǐ", "Português": "quantos", "HSK": 1}, {"汉字": "家", "Pinyin": "jiā", "Português": "família, casa", "HSK": 1}, {"汉字": "叫", "Pinyin": "jiào", "Português": "chamar-se", "HSK": 1}, {"汉字": "今天", "Pinyin": "jīntiān", "Português": "hoje", "HSK": 1}, {"汉字": "九", "Pinyin": "jiǔ", "Português": "nove", "HSK": 1}, {"汉字": "开", "Pinyin": "kāi", "Português": "abrir, dirigir", "HSK": 1}, {"汉字": "看", "Pinyin": "kàn", "Português": "ver", "HSK": 1}, {"汉字": "看见", "Pinyin": "kànjiàn", "Português": "enxergar", "HSK": 1}, {"汉字": "块", "Pinyin": "kuài", "Português": "unidade monetária (informal)", "HSK": 1}, {"汉字": "来", "Pinyin": "lái", "Português": "vir", "HSK": 1}, {"汉字": "老师", "Pinyin": "lǎoshī", "Português": "professor(a)", "HSK": 1}, {"汉字": "了", "Pinyin": "le", "Português": "partícula de ação concluída", "HSK": 1}, {"汉字": "冷", "Pinyin": "lěng", "Português": "frio", "HSK": 1}, {"汉字": "里", "Pinyin": "lǐ", "Português": "dentro", "HSK": 1}, {"汉字": "六", "Pinyin": "liù", "Português": "seis", "HSK": 1}, {"汉字": "妈妈", "Pinyin": "māma", "Português": "mãe", "HSK": 1}, {"汉字": "吗", "Pinyin": "ma", "Português": "partícula interrogativa", "HSK": 1}, {"汉字": "买", "Pinyin": "mǎi", "Português": "comprar", "HSK": 1}, {"汉字": "猫", "Pinyin": "māo", "Português": "gato", "HSK": 1}, {"汉字": "没", "Pinyin": "méi", "Português": "não (passado)", "HSK": 1}, {"汉字": "没关系", "Pinyin": "méiguānxi", "Português": "não tem problema", "HSK": 1}, {"汉字": "米饭", "Pinyin": "mǐfàn", "Português": "arroz cozido", "HSK": 1}, {"汉字": "明天", "Pinyin": "míngtiān", "Português": "amanhã", "HSK": 1}, {"汉字": "名字", "Pinyin": "míngzi", "Português": "nome", "HSK": 1}, {"汉字": "哪", "Pinyin": "nǎ", "Português": "qual", "HSK": 1}, {"汉字": "哪儿", "Pinyin": "nǎr", "Português": "onde", "HSK": 1}, {"汉字": "那", "Pinyin": "nà", "Português": "aquele", "HSK": 1}, {"汉字": "那儿", "Pinyin": "nàr", "Português": "lá", "HSK": 1}, {"汉字": "呢", "Pinyin": "ne", "Português": "partícula de ênfase ou elipse", "HSK": 1}, {"汉字": "能", "Pinyin": "néng", "Português": "poder", "HSK": 1}, {"汉字": "你", "Pinyin": "nǐ", "Português": "você", "HSK": 1}, {"汉字": "年", "Pinyin": "nián", "Português": "ano", "HSK": 1}, {"汉字": "女儿", "Pinyin": "nǚ'ér", "Português": "filha", "HSK": 1}, {"汉字": "朋友", "Pinyin": "péngyou", "Português": "amigo(a)", "HSK": 1}, {"汉字": "漂亮", "Pinyin": "piàoliang", "Português": "bonito(a)", "HSK": 1}, {"汉字": "苹果", "Pinyin": "píngguǒ", "Português": "maçã", "HSK": 1}, {"汉字": "七", "Pinyin": "qī", "Português": "sete", "HSK": 1}, {"汉字": "前面", "Pinyin": "qiánmian", "Português": "na frente", "HSK": 1}, {"汉字": "钱", "Pinyin": "qián", "Português": "dinheiro", "HSK": 1}, {"汉字": "请", "Pinyin": "qǐng", "Português": "por favor", "HSK": 1}, {"汉字": "去", "Pinyin": "qù", "Português": "ir", "HSK": 1}, {"汉字": "热", "Pinyin": "rè", "Português": "quente", "HSK": 1}, {"汉字": "人", "Pinyin": "rén", "Português": "pessoa", "HSK": 1}, {"汉字": "认识", "Pinyin": "rènshi", "Português": "conhecer", "HSK": 1}, {"汉字": "三", "Pinyin": "sān", "Português": "três", "HSK": 1}, {"汉字": "商店", "Pinyin": "shāngdiàn", "Português": "loja", "HSK": 1}, {"汉字": "上", "Pinyin": "shàng", "Português": "em cima", "HSK": 1}, {"汉字": "上午", "Pinyin": "shàngwǔ", "Português": "manhã", "HSK": 1}, {"汉字": "少", "Pinyin": "shǎo", "Português": "pouco", "HSK": 1}, {"汉字": "谁", "Pinyin": "shéi", "Português": "quem", "HSK": 1}, {"汉字": "什么", "Pinyin": "shénme", "Português": "o quê", "HSK": 1}, {"汉字": "十", "Pinyin": "shí", "Português": "dez", "HSK": 1}, {"汉字": "时候", "Pinyin": "shíhou", "Português": "tempo (momento)", "HSK": 1}, {"汉字": "是", "Pinyin": "shì", "Português": "ser", "HSK": 1}, {"汉字": "书", "Pinyin": "shū", "Português": "livro", "HSK": 1}, {"汉字": "水", "Pinyin": "shuǐ", "Português": "água", "HSK": 1}, {"汉字": "水果", "Pinyin": "shuǐguǒ", "Português": "fruta", "HSK": 1}, {"汉字": "睡觉", "Pinyin": "shuìjiào", "Português": "dormir", "HSK": 1}, {"汉字": "说", "Pinyin": "shuō", "Português": "falar", "HSK": 1}, {"汉字": "四", "Pinyin": "sì", "Português": "quatro", "HSK": 1}, {"汉字": "岁", "Pinyin": "suì", "Português": "idade/anos", "HSK": 1}, {"汉字": "他", "Pinyin": "tā", "Português": "ele", "HSK": 1}, {"汉字": "她", "Pinyin": "tā", "Português": "ela", "HSK": 1}, {"汉字": "太", "Pinyin": "tài", "Português": "demais", "HSK": 1}, {"汉字": "天气", "Pinyin": "tiānqì", "Português": "clima", "HSK": 1}, {"汉字": "听", "Pinyin": "tīng", "Português": "ouvir", "HSK": 1}, {"汉字": "同学", "Pinyin": "tóngxué", "Português": "colega de classe", "HSK": 1}, {"汉字": "喂", "Pinyin": "wèi", "Português": "alô (telefone)", "HSK": 1}, {"汉字": "我", "Pinyin": "wǒ", "Português": "eu", "HSK": 1}, {"汉字": "我们", "Pinyin": "wǒmen", "Português": "nós", "HSK": 1}, {"汉字": "五", "Pinyin": "wǔ", "Português": "cinco", "HSK": 1}, {"汉字": "喜欢", "Pinyin": "xǐhuan", "Português": "gostar", "HSK": 1}, {"汉字": "下", "Pinyin": "xià", "Português": "embaixo", "HSK": 1}, {"汉字": "下午", "Pinyin": "xiàwǔ", "Português": "tarde (período)", "HSK": 1}, {"汉字": "下雨", "Pinyin": "xiàyǔ", "Português": "chover", "HSK": 1}, {"汉字": "先生", "Pinyin": "xiānsheng", "Português": "senhor", "HSK": 1}, {"汉字": "现在", "Pinyin": "xiànzài", "Português": "agora", "HSK": 1}, {"汉字": "想", "Pinyin": "xiǎng", "Português": "querer/pensar", "HSK": 1}, {"汉字": "小", "Pinyin": "xiǎo", "Português": "pequeno", "HSK": 1}, {"汉字": "小姐", "Pinyin": "xiǎojiě", "Português": "senhorita", "HSK": 1}, {"汉字": "些", "Pinyin": "xiē", "Português": "alguns", "HSK": 1}, {"汉字": "写", "Pinyin": "xiě", "Português": "escrever", "HSK": 1}, {"汉字": "谢谢", "Pinyin": "xièxie", "Português": "obrigado", "HSK": 1}, {"汉字": "星期", "Pinyin": "xīngqī", "Português": "semana", "HSK": 1}, {"汉字": "学生", "Pinyin": "xuésheng", "Português": "estudante", "HSK": 1}, {"汉字": "学习", "Pinyin": "xuéxí", "Português": "estudar", "HSK": 1}, {"汉字": "学校", "Pinyin": "xuéxiào", "Português": "escola", "HSK": 1}, {"汉字": "一", "Pinyin": "yī", "Português": "um", "HSK": 1}, {"汉字": "衣服", "Pinyin": "yīfu", "Português": "roupa", "HSK": 1}, {"汉字": "医生", "Pinyin": "yīshēng", "Português": "médico", "HSK": 1}, {"汉字": "医院", "Pinyin": "yīyuàn", "Português": "hospital", "HSK": 1}, {"汉字": "椅子", "Pinyin": "yǐzi", "Português": "cadeira", "HSK": 1}, {"汉字": "有", "Pinyin": "yǒu", "Português": "ter", "HSK": 1}, {"汉字": "月", "Pinyin": "yuè", "Português": "mês", "HSK": 1}, {"汉字": "在", "Pinyin": "zài", "Português": "estar em", "HSK": 1}, {"汉字": "再见", "Pinyin": "zàijiàn", "Português": "tchau", "HSK": 1}, {"汉字": "怎么", "Pinyin": "zěnme", "Português": "como", "HSK": 1}, {"汉字": "怎么样", "Pinyin": "zěnmeyàng", "Português": "que tal", "HSK": 1}, {"汉字": "这", "Pinyin": "zhè", "Português": "este", "HSK": 1}, {"汉字": "这儿", "Pinyin": "zhèr", "Português": "aqui", "HSK": 1}, {"汉字": "中国", "Pinyin": "Zhōngguó", "Português": "China", "HSK": 1}, {"汉字": "中午", "Pinyin": "zhōngwǔ", "Português": "meio-dia", "HSK": 1}, {"汉字": "住", "Pinyin": "zhù", "Português": "morar", "HSK": 1}, {"汉字": "桌子", "Pinyin": "zhuōzi", "Português": "mesa", "HSK": 1}, {"汉字": "字", "Pinyin": "zì", "Português": "caractere", "HSK": 1}, {"汉字": "昨天", "Pinyin": "zuótiān", "Português": "ontem", "HSK": 1}, {"汉字": "做", "Pinyin": "zuò", "Português": "fazer", "HSK": 1}, {"汉字": "坐", "Pinyin": "zuò", "Português": "sentar", "HSK": 1}]
+          // ... HSK2, HSK3 etc. data ...
+        };
+
+        // DOM Elements (Add backgroundMusic and muteButton)
+        const startScreen = document.getElementById("start-screen");
+        const startButton = document.getElementById("start-button"); // Should find the button now if HTML is correct
+        const quizContainer = document.getElementById("quiz-container");
+        const levelSelect = document.getElementById("levelSelect");
+        const questionEl = document.getElementById("question");
+        const optionsEl = document.getElementById("options");
+        const feedbackEl = document.getElementById("feedback");
+        const resultEl = document.getElementById("result");
+        const restartButton = document.getElementById("restart");
+        const skipButton = document.getElementById("skip");
+        const hintButton = document.getElementById("hint");
+        const progressTextEl = document.getElementById("progress-text");
+        const scoreTextEl = document.getElementById("score-text");
+        const correctSound = document.getElementById("correctSound");
+        const wrongSound = document.getElementById("wrongSound");
+        const backgroundMusic = document.getElementById("backgroundMusic");
+        const muteButton = document.getElementById("muteButton");
+        const actionButtonsEl = document.querySelector(".action-buttons");
+
+        // State Variables
+        let allQuestions = [];
+        let currentQuestions = [];
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let currentLevelWords = [];
+        const questionsPerRound = 20;
+        let isMuted = false;
+        let audioUnlocked = false;
+
+        // --- Utility Functions ---
+        function shuffle(arr) {
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        function getOptions(correctAnswer, fieldToSample, wordPool) {
+            const options = new Set([correctAnswer]);
+            const poolSize = wordPool.length;
+            let attempts = 0;
+            const maxAttempts = poolSize * 2;
+
+            while (options.size < 4 && attempts < maxAttempts) {
+                const randomIndex = Math.floor(Math.random() * poolSize);
+                // Ensure wordPool[randomIndex] exists before accessing field
+                if(wordPool[randomIndex]){
+                    const randomOption = wordPool[randomIndex][fieldToSample];
+                    if (randomOption && !options.has(randomOption)) {
+                         options.add(randomOption);
+                    }
+                }
+                attempts++;
+            }
+             while (options.size < 4) {
+                 options.add(`Opção ${options.size + 1}`);
+             }
+            return shuffle([...options]);
+        }
+
+
+        // --- Audio Handling ---
+        function unlockAudio() {
+            if (audioUnlocked) return;
+             console.log("Tentando destravar contexto de áudio...");
+             const sounds = [correctSound, wrongSound, backgroundMusic];
+             let promises = [];
+
+             sounds.forEach(sound => {
+                 if(sound) {
+                     // Set volume low to avoid blast if it plays briefly
+                     const originalVolume = sound.volume;
+                     sound.volume = 0.01;
+                     let promise = sound.play();
+                     if (promise !== undefined) {
+                         promises.push(
+                             promise.then(() => {
+                                 sound.pause();
+                                 sound.currentTime = 0;
+                                 sound.volume = originalVolume; // Restore volume
+                                 console.log(sound.id + " destravado.");
+                             }).catch(error => {
+                                 // console.warn("Destravamento falhou para " + sound.id + " (esperado em alguns casos):", error.message);
+                                 sound.volume = originalVolume; // Restore volume even on failure
+                             })
+                         );
+                     }
+                 }
+             });
+
+             // Wait for all unlock attempts before declaring unlocked
+             Promise.all(promises).then(() => {
+                 console.log("Tentativas de destravamento concluídas.");
+                 audioUnlocked = true;
+                 // Try playing background music again now that context *should* be active
+                 playBackgroundMusic();
+             }).catch(() => {
+                 console.warn("Algumas tentativas de destravamento falharam, mas definindo audioUnlocked como true de qualquer maneira.");
+                  audioUnlocked = true; // Still set to true, the user click is the main trigger
+             });
+        }
+
+
+         function playSound(soundElement) {
+             if (soundElement && audioUnlocked) {
+                 soundElement.currentTime = 0;
+                 soundElement.play().catch(error => console.error("Erro ao tocar som ("+soundElement.id+ "):", error));
+             } else if (!audioUnlocked) {
+                 console.warn("Contexto de áudio não destravado. Som "+soundElement.id+" pulado.");
+             } else if (!soundElement) {
+                 console.warn("Tentativa de tocar elemento de som nulo.");
+             }
+         }
+
+         function playBackgroundMusic() {
+             // Only play if audio is unlocked and not muted
+             if (backgroundMusic && !isMuted && audioUnlocked) {
+                 console.log("Tentando tocar música de fundo...");
+                 backgroundMusic.play().catch(error => {
+                     // Common error: "play() failed because the user didn't interact with the document first"
+                     // Or "The play() request was interrupted" - less common here
+                      console.warn("Falha ao tocar música de fundo:", error.message);
+                      // We might need another user interaction if unlockAudio wasn't enough initially
+                 });
+             } else {
+                 console.log("Música de fundo não tocada (Muted: "+isMuted+", Unlocked: "+audioUnlocked+")");
+             }
+         }
+
+         function pauseBackgroundMusic() {
+             if (backgroundMusic) {
+                 backgroundMusic.pause();
+                 console.log("Música de fundo pausada.");
+             }
+         }
+
+         function toggleMute() {
+             isMuted = !isMuted;
+             if(backgroundMusic) { // Check if element exists
+                 backgroundMusic.muted = isMuted;
+                 muteButton.textContent = isMuted ? '🔇' : '🎵';
+                 console.log("Mute Toggled: ", isMuted);
+                 if (!isMuted) {
+                     playBackgroundMusic(); // Try to play if unmuting
+                 }
+             } else {
+                 console.warn("Elemento backgroundMusic não encontrado para toggleMute.");
+             }
+         }
+
+        // --- Core Quiz Logic ---
+        function loadLevelWords(selectedLevel) {
+             currentLevelWords = [];
+             const selectedLevelNum = parseInt(selectedLevel.replace('HSK', ''), 10);
+             for (let i = 1; i <= selectedLevelNum; i++) {
+                 const levelKey = `HSK${i}`;
+                 if (levels[levelKey]) {
+                     currentLevelWords = currentLevelWords.concat(levels[levelKey]);
+                 } else {
+                     console.warn(`Dados para ${levelKey} não encontrados.`);
+                 }
+             }
+             const uniqueWords = new Map();
+             currentLevelWords.forEach(word => {
+                 if (word && word['汉字'] && !uniqueWords.has(word['汉字'])) {
+                     uniqueWords.set(word['汉字'], word);
+                 }
+             });
+             currentLevelWords = Array.from(uniqueWords.values());
+
+             if (currentLevelWords.length === 0) {
+                  console.error("Nenhuma palavra carregada para o nível selecionado!");
+                  questionEl.textContent = "Erro: Não foi possível carregar palavras para este nível.";
+                  optionsEl.innerHTML = "";
+                  return false;
+             }
+             return true;
+         }
+
+        function generateQuestions() {
+             allQuestions = [];
+             if (currentLevelWords.length === 0) return;
+
+             currentLevelWords.forEach(wordData => {
+                 if (!wordData || !wordData['汉字'] || !wordData['Português'] || !wordData['Pinyin']) {
+                    console.warn("Pulando dados de palavra incompletos:", wordData);
+                    return;
+                 }
+                 allQuestions.push({
+                     type: "hanzi_to_pt",
+                     questionText: `Qual o significado de: "${wordData['汉字']}"?`,
+                     correctAnswer: wordData["Português"],
+                     options: getOptions(wordData["Português"], "Português", currentLevelWords),
+                     details: wordData
+                 });
+                 allQuestions.push({
+                     type: "pt_to_hanzi",
+                     questionText: `Como se escreve em chinês: "${wordData['Português']}"?`,
+                     correctAnswer: wordData["汉字"],
+                     options: getOptions(wordData["汉字"], "汉字", currentLevelWords),
+                     details: wordData
+                 });
+                  allQuestions.push({
+                      type: "pinyin_to_pt",
+                      questionText: `Qual o significado de: "${wordData['Pinyin']}"?`,
+                      correctAnswer: wordData["Português"],
+                      options: getOptions(wordData["Português"], "Português", currentLevelWords),
+                      details: wordData
+                  });
+             });
+
+             allQuestions = shuffle(allQuestions);
+             currentQuestions = allQuestions.slice(0, Math.min(questionsPerRound, allQuestions.length));
+
+             if (currentQuestions.length === 0 && currentLevelWords.length > 0) {
+                 console.error("Falha ao gerar perguntas mesmo com palavras carregadas.");
+                  questionEl.textContent = "Erro ao gerar perguntas.";
+                  optionsEl.innerHTML = "";
+             }
+         }
+
+        function displayQuestion() {
+              if (currentQuestionIndex >= currentQuestions.length) {
+                 showResult();
+                 return;
+             }
+             hideFeedback();
+             resultEl.style.display = 'none';
+             actionButtonsEl.style.display = 'flex';
+
+             const currentQ = currentQuestions[currentQuestionIndex];
+             questionEl.textContent = currentQ.questionText;
+             optionsEl.innerHTML = "";
+             optionsEl.style.pointerEvents = 'auto';
+
+             skipButton.disabled = false;
+             hintButton.disabled = false;
+
+             currentQ.options.forEach(option => {
+                 const btn = document.createElement("button");
+                 btn.textContent = option;
+                 btn.onclick = () => handleAnswer(btn, option);
+                 optionsEl.appendChild(btn);
+             });
+             updateProgress();
+         }
+
+        function handleAnswer(buttonEl, selectedOption) {
+             document.querySelectorAll("#options button").forEach(btn => { btn.disabled = true; });
+             optionsEl.style.pointerEvents = 'none';
+             skipButton.disabled = true;
+             hintButton.disabled = true;
+
+             const currentQ = currentQuestions[currentQuestionIndex];
+             const isCorrect = selectedOption === currentQ.correctAnswer;
+
+             document.querySelectorAll("#options button").forEach(btn => {
+                 if (btn.textContent === currentQ.correctAnswer) {
+                     btn.classList.add("correct");
+                 } else if (btn === buttonEl) {
+                     btn.classList.add("wrong");
+                 }
+             });
+
+             if (isCorrect) {
+                 score++;
+                 feedbackEl.textContent = "✅ Correto!";
+                 feedbackEl.className = 'correct-feedback';
+                 playSound(correctSound); // Play sound effect
+             } else {
+                 feedbackEl.textContent = `❌ Errado. Correto: ${currentQ.correctAnswer} (Pinyin: ${currentQ.details.Pinyin})`;
+                 feedbackEl.className = 'wrong-feedback';
+                 playSound(wrongSound); // Play sound effect
+             }
+             feedbackEl.style.display = 'block';
+             updateProgress();
+
+             setTimeout(() => {
+                 currentQuestionIndex++;
+                 if (currentQuestionIndex < currentQuestions.length) {
+                     displayQuestion();
+                 } else {
+                     showResult();
+                 }
+             }, 1800);
+         }
+
+         function skipQuestion() {
+             const currentQ = currentQuestions[currentQuestionIndex];
+             feedbackEl.textContent = `⏭ Pergunta pulada. Resposta: ${currentQ.correctAnswer} (Pinyin: ${currentQ.details.Pinyin})`;
+             feedbackEl.className = 'hint-feedback';
+             feedbackEl.style.display = 'block';
+             // playSound(wrongSound); // Opcional
+
+             optionsEl.style.pointerEvents = 'none';
+             document.querySelectorAll("#options button").forEach(btn => { btn.disabled = true;});
+             skipButton.disabled = true;
+             hintButton.disabled = true;
+
+             setTimeout(() => {
+                  currentQuestionIndex++;
+                  if (currentQuestionIndex < currentQuestions.length) {
+                      displayQuestion();
+                  } else {
+                      showResult();
+                  }
+             }, 1800);
+         }
+
+        function showHint() {
+             const currentQ = currentQuestions[currentQuestionIndex];
+             feedbackEl.textContent = `💡 Dica: A resposta começa com '${currentQ.correctAnswer.charAt(0)}'`;
+             feedbackEl.className = 'hint-feedback';
+             feedbackEl.style.display = 'block';
+             hintButton.disabled = true;
+         }
+
+        function showResult() {
+              questionEl.textContent = "Quiz Finalizado!";
+              optionsEl.innerHTML = "";
+              hideFeedback();
+              actionButtonsEl.style.display = 'none';
+
+              const percentage = currentQuestions.length > 0 ? Math.round((score / currentQuestions.length) * 100) : 0;
+              resultEl.textContent = `Você acertou ${score} de ${currentQuestions.length} perguntas (${percentage}%).`;
+              resultEl.style.display = 'block';
+
+              restartButton.style.display = 'block';
+              restartButton.style.margin = '20px auto';
+              actionButtonsEl.style.display = 'flex';
+              skipButton.style.display = 'none';
+              hintButton.style.display = 'none';
+
+              pauseBackgroundMusic();
+         }
+
+        function updateProgress() {
+              const total = currentQuestions.length;
+              const currentNum = Math.min(currentQuestionIndex + 1, total);
+              progressTextEl.textContent = `Pergunta: ${currentNum} / ${total}`;
+              scoreTextEl.textContent = `Pontos: ${score}`;
+         }
+
+        function hideFeedback() {
+             feedbackEl.style.display = 'none';
+             feedbackEl.textContent = '';
+             feedbackEl.className = '';
+         }
+
+        function startQuiz() {
+             console.log("Iniciando o quiz...");
+             const selectedLevel = levelSelect.value;
+
+             if (!loadLevelWords(selectedLevel)) { return; }
+
+              score = 0;
+              currentQuestionIndex = 0;
+              generateQuestions();
+
+              if (currentQuestions.length === 0) {
+                 console.error("Nenhuma pergunta gerada para o nível "+ selectedLevel);
+                 questionEl.textContent = "Nenhuma pergunta disponível para este nível.";
+                 optionsEl.innerHTML = "";
+                 actionButtonsEl.style.display = 'none';
+                 return;
+             }
+
+              hideFeedback();
+              resultEl.style.display = 'none';
+              skipButton.style.display = 'inline-block';
+              hintButton.style.display = 'inline-block';
+              restartButton.style.display = 'inline-block';
+              actionButtonsEl.style.display = 'flex';
+
+              displayQuestion();
+              playBackgroundMusic(); // Tenta tocar música de fundo
+         }
+
+        function confirmLevelChange() {
+             console.log("Nível alterado, reiniciando quiz.");
+             startQuiz();
+         }
+
+
+        // --- Initialization ---
+        // Event listener para o botão Iniciar
+        if (startButton) { // Verifica se o botão foi encontrado antes de adicionar listener
+            startButton.addEventListener('click', () => {
+                console.log("Botão Iniciar clicado.");
+                unlockAudio(); // Tenta destravar o áudio na primeira interação
+                startScreen.style.display = 'none';
+                quizContainer.style.display = 'flex';
+                if (muteButton) muteButton.style.display = 'flex'; // Mostra o botão mute
+                startQuiz();
+            });
+        } else {
+            // ERRO CRÍTICO: Se chegou aqui, o botão Iniciar *ainda* não foi encontrado.
+            // Isso impede o início do quiz. Verifique o ID no HTML!
+            console.error("ERRO CRÍTICO: O elemento #start-button não foi encontrado no HTML!");
+            // Opcional: Mostrar uma mensagem de erro na página
+            document.body.innerHTML = "<h1 style='color: red;'>Erro: Elemento 'start-button' não encontrado. Verifique o HTML.</h1>";
+        }
+
+
+        // Event listener para o botão Mute
+        if(muteButton) {
+            muteButton.addEventListener('click', toggleMute);
+             // Esconde inicialmente
+             muteButton.style.display = 'none';
+        } else {
+            console.warn("Botão Mute não encontrado.");
+        }
+
+
+        // Define volume inicial da música (opcional)
+        if (backgroundMusic) {
+            backgroundMusic.volume = 0.3;
+        }
+
+    </script>
+</body>
+</html>
